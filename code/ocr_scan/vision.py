@@ -8,8 +8,6 @@ import csv
 import mysql.connector
 from mysql.connector import Error
 
-load_dotenv()
-
 
 def getText(uri):
     image_uri = uri
@@ -52,10 +50,11 @@ def getData(text):
                 if data == "":
                     data = None
             if i == "housing":
-                if data[0].isnumeric():
-                    data = None
+                if "Incident" in data:
+                    data = data[:data.index("Incident")]
+                    data = data[:-18].strip()
                 else:
-                    data = data[:7].strip()
+                    data = data[:-18].strip()
                 if data == "":
                     data = None
             if i == "cosignature":
@@ -68,13 +67,13 @@ def getData(text):
                 if "Received" in data and "Signature" in data:
                     data = data[data.index(
                         "Received")+len("Received"):data.index("Signature")].strip()
-                if data == "" or len(data) > 8:
+                if data == "" or len(data) > 8 or not data[0].isnumeric():
                     data = None
             if i == "decisiondate":
                 if "Decision Date" in data and "Signature" in data:
                     data = data[data.index(
                         "Decision Date")+len("Decision Date"):data.index("Signature")].strip()
-                if data == "" or len(data) > 8:
+                if data == "" or len(data) > 8 or not data[0].isnumeric():
                     data = None
             if i == "grievancedate":
                 if "Incident" in data:
@@ -82,7 +81,7 @@ def getData(text):
                     data = data[-9:].strip()
                 else:
                     data = data[-9:].strip()
-                if data == "" or len(data) > 8:
+                if data == "" or len(data) > 8 or not data[0].isnumeric():
                     data = None
             if i == "incidentdate":
                 if "Incident" in data:
@@ -90,17 +89,19 @@ def getData(text):
                     data = data[-18:-9].strip()
                 else:
                     data = data[-18:-9].strip()
-                if data == "" or len(data) > 8:
-                    data == None
+                if data == "" or len(data) > 8 or not data[0].isnumeric():
+                    data = None
             if i == "corecipient":
                 if "Staff" in data:
                     data = data[data.index("Staff") + len("Staff"):].strip()
             if data == "":
-                data == None
+                data = None
         else:
             data = None
         if data != None:
             return_dict[i] = data.strip('\n').replace('\n', '')
+        else:
+            return_dict[i] = None
     return return_dict
 
 def clearDB():
@@ -108,7 +109,7 @@ def clearDB():
         conn = mysql.connector.connect(
         host='localhost',
         user='root',
-        password=PWD,
+        password=os.getenv("SQLPWD"),
         database="grievancesDB")
 
         if conn.is_connected():
@@ -130,7 +131,7 @@ def addGrievance(data):
         conn = mysql.connector.connect(
             host='localhost',
             user='root',
-            password=PWD,
+            password=os.getenv("SQLPWD"),
             database="grievancesDB")
         if conn.is_connected():
             print("Connected to db")
@@ -143,7 +144,7 @@ def addGrievance(data):
             sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('grievances_auto', columns, placeholders)
             cursor.execute(sql, list(data.values()))
             conn.commit()
-            print("All records inserted")
+            print("record inserted")
     except Error as e:
         print("Error while connecting to MySQL", e)
 
@@ -158,14 +159,15 @@ def ocr():
             addGrievance(grievancedata)
             count += 1
             print(count)
+            print()
 
 
-def showResults):
+def showResults():
     try:
         conn = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='MYSQLPWD',
+            password=os.getenv("SQLPWD"),
             database="grievancesDB")
         if conn.is_connected():
             print("Connected to db")
@@ -184,3 +186,9 @@ def showResults):
             fp.close()
     except Error as e:
         print("Error while connecting to MySQL", e)
+
+if __name__ == "__main__":
+    load_dotenv(override=True)
+    clearDB()
+    ocr()
+    showResults()
