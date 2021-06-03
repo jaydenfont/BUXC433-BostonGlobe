@@ -10,6 +10,9 @@ from mysql.connector import Error
 
 
 def getText(uri):
+    """
+    Function that takes as input an address to an image and returns all the text that was detected in that image
+    """
     image_uri = uri
     client = vision.ImageAnnotatorClient()
     with io.open(image_uri, 'rb') as image_file:
@@ -20,6 +23,10 @@ def getText(uri):
 
 
 def getData(text):
+    """
+    Function that takes as input a string and returns dictionary with the fields of the resulting database as keys and the values discovered for those keys in the inputed string.
+    """
+    # dictionary with keys being the fields of the database and values being an array of strings from which to extract the strings for the database values from.
     field_dict = {'institution': ["Institution", "Date"], 'complaint': ["Informal filed", "Remedy"], 'remedy': ["Requested", "Recipient"], 'finaldecision': ["Final", ""], 'housing': ["Housing", "Informal"], "cosignature": [
         "INMATE RECEIPT", ""], "recieveddate": ["INMATE RECEIPT", ""], "decisiondate": ["RECEIPT", "appealed"], 'grievancedate': ["Housing", "Informal"], 'incidentdate': ["Housing", "Informal"], "corecipient": ["Requested", "Recipient"]}
     return_dict = {}
@@ -29,8 +36,7 @@ def getData(text):
         string2 = field_dict[i][1]
         if string1 in text and string2 in text:
             if string2 != "":
-                data = text[text.index(string1)+len(string1)
-                                       :text.index(string2)].strip()
+                data = text[text.index(string1)+len(string1)                            :text.index(string2)].strip()
             else:
                 data = text[text.index(string1)+len(string1):].strip()
 
@@ -104,13 +110,17 @@ def getData(text):
             return_dict[i] = None
     return return_dict
 
+
 def clearDB():
+    """
+    Function that clears the database,
+    """
     try:
         conn = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password=os.getenv("SQLPWD"),
-        database="grievancesDB")
+            host='localhost',
+            user='root',
+            password=os.getenv("SQLPWD"),
+            database="grievancesDB")
 
         if conn.is_connected():
             print("Connected to db")
@@ -127,6 +137,9 @@ def clearDB():
 
 
 def addGrievance(data):
+    """
+    Function that takes into input a dictionary of grievance data and puts it into a database.
+    """
     try:
         conn = mysql.connector.connect(
             host='localhost',
@@ -141,7 +154,8 @@ def addGrievance(data):
             print("You're connected to database: ", record)
             placeholders = ', '.join(['%s'] * len(data))
             columns = ', '.join(data.keys())
-            sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('grievances_auto', columns, placeholders)
+            sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % (
+                'grievances_auto', columns, placeholders)
             cursor.execute(sql, list(data.values()))
             conn.commit()
             print("record inserted")
@@ -150,7 +164,10 @@ def addGrievance(data):
 
 
 def ocr():
-    directory = '/Users/momol/BU/BUXC433-BostonGlobe/code/ocr_scan/grievances'
+    """
+    Funciton to add all greivances into the database.
+    """
+    directory = os.getenv('GRIEVANCES_DIRECTORY')
     count = 0
     for filename in os.listdir(directory):
         if filename.endswith(".jpg"):
@@ -162,7 +179,10 @@ def ocr():
             print()
 
 
-def showResults():
+def showDatabase():
+    """
+    Function to show all entries in the database.
+    """
     try:
         conn = mysql.connector.connect(
             host='localhost',
@@ -187,8 +207,9 @@ def showResults():
     except Error as e:
         print("Error while connecting to MySQL", e)
 
+
 if __name__ == "__main__":
     load_dotenv(override=True)
     clearDB()
     ocr()
-    showResults()
+    showDatabase()
