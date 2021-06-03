@@ -1,4 +1,3 @@
-from __future__ import print_function
 import re
 from google.cloud import vision
 import io
