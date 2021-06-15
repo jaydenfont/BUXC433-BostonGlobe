@@ -12,12 +12,14 @@ def getText(uri):
     """
     Function that takes as input an address to an image and returns all the text that was detected in that image
     """
+    print('here')
     image_uri = uri
     client = vision.ImageAnnotatorClient()
     with io.open(image_uri, 'rb') as image_file:
         content = image_file.read()
     image = vision.Image(content=content)
     response = client.text_detection(image=image)
+    print(response.text_annotations[0].description)
     return response.text_annotations[0].description
 
 
@@ -169,7 +171,9 @@ def ocr():
     directory = os.getenv('GRIEVANCES_DIRECTORY')
     count = 0
     for filename in os.listdir(directory):
+        print(filename)
         if filename.endswith(".jpg"):
+            print('file found')
             grievancetext = getText(os.path.join(directory, filename))
             grievancedata = getData(grievancetext)
             addGrievance(grievancedata)
