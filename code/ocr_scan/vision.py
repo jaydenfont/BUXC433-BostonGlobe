@@ -8,6 +8,8 @@ import mysql.connector
 from mysql.connector import Error
 
 
+
+# for JPEG
 def getText(uri):
     """
     Function that takes as input an address to an image and returns all the text that was detected in that image
@@ -22,6 +24,79 @@ def getText(uri):
     print(response.text_annotations[0].description)
     return response.text_annotations[0].description
 
+
+def get_pdf_text():
+    import json
+    from google.cloud import storage
+    from google.oauth2.service_account import Credentials
+
+    client = vision.ImageAnnotatorClient()
+    batch_size=4
+    mime_type = 'application/pdf'
+    feature = vision.Feature(
+        type_=vision.Feature.Type.DOCUMENT_TEXT_DETECTION
+    )
+
+    # GCS source (where pdf is stored on cloud)
+    gcs_source_uri = 'gs://boston-globe/Concord_Grievances.pdf'
+    gcs_source = vision.GcsSource(uri=gcs_source_uri)
+
+    # set configs for input data
+    input_config = vision.InputConfig(
+        gcs_source=gcs_source, mime_type=mime_type)
+
+    # set destination on google cloud
+    gcs_destination_uri = 'gs://boston-globe/concord_result/'
+    gcs_destination = vision.GcsDestination(uri=gcs_destination_uri)
+
+    # set configs for output
+    output_config = vision.OutputConfig(
+        gcs_destination=gcs_destination, batch_size=batch_size)
+
+    async_request = vision.AsyncAnnotateFileRequest(
+        features=[feature], input_config=input_config,
+        output_config=output_config)
+
+    operation = client.async_batch_annotate_files(
+        requests=[async_request])
+
+    print('Waiting for the operation to finish.')
+    operation.result(timeout=420)
+
+    # Once the request has completed and the output has been
+    # written to GCS, we can list all the output files.
+    storage_client = storage.Client()
+
+    match = re.match(r'gs://([^/]+)/(.+)', gcs_destination_uri)
+    bucket_name = match.group(1)
+    prefix = match.group(2)
+
+    bucket = storage_client.get_bucket(bucket_name)
+
+    # List objects with the given prefix.
+    blob_list = list(bucket.list_blobs(prefix=prefix))
+    print('Output files:')
+    for blob in blob_list:
+        print(blob.name)
+
+    # Process the first output file from GCS.
+    # Since we specified batch_size=2, the first response contains
+    # the first two pages of the input file.
+    output = blob_list[0]
+
+    json_string = output.download_as_string()
+    response = json.loads(json_string)
+
+    # The actual response for the first page of the input file.
+    first_page_response = response['responses'][0]
+    annotation = first_page_response['fullTextAnnotation']
+
+    # Here we print the full text from the first page.
+    # The response contains more information:
+    # annotation/pages/blocks/paragraphs/words/symbols
+    # including confidence scores and bounding boxes
+    print('Full text:\n')
+    print(annotation['text'])
 
 def getData(text):
     """
@@ -213,6 +288,7 @@ def showDatabase():
 
 if __name__ == "__main__":
     load_dotenv(override=True)
-    clearDB()
-    ocr()
-    showDatabase()
+    #clearDB()
+    #ocr()
+    #showDatabase()
+    get_pdf_text()
