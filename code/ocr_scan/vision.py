@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 import csv
 import mysql.connector
 from mysql.connector import Error
-
+import json
+from google.cloud import storage
 
 
 # for JPEG
@@ -26,19 +27,15 @@ def getText(uri):
 
 
 def get_pdf_text():
-    import json
-    from google.cloud import storage
-    from google.oauth2.service_account import Credentials
-
-    client = vision.ImageAnnotatorClient()
-    batch_size=4
+    client = vision.ImageAnnotatorClient.from_service_account_json(os.getenv("credentials"))
+    batch_size=100
     mime_type = 'application/pdf'
     feature = vision.Feature(
         type_=vision.Feature.Type.DOCUMENT_TEXT_DETECTION
     )
 
     # GCS source (where pdf is stored on cloud)
-    gcs_source_uri = 'gs://boston-globe/Concord_Grievances.pdf'
+    gcs_source_uri = "gs://boston-globe/Norfolk_Grievances.pdf"
     gcs_source = vision.GcsSource(uri=gcs_source_uri)
 
     # set configs for input data
@@ -46,7 +43,7 @@ def get_pdf_text():
         gcs_source=gcs_source, mime_type=mime_type)
 
     # set destination on google cloud
-    gcs_destination_uri = 'gs://boston-globe/concord_result/'
+    gcs_destination_uri = 'gs://boston-globe/norfolk_result/'
     gcs_destination = vision.GcsDestination(uri=gcs_destination_uri)
 
     # set configs for output
@@ -65,7 +62,7 @@ def get_pdf_text():
 
     # Once the request has completed and the output has been
     # written to GCS, we can list all the output files.
-    storage_client = storage.Client()
+    storage_client = storage.Client.from_service_account_json(os.getenv("credentials"))
 
     match = re.match(r'gs://([^/]+)/(.+)', gcs_destination_uri)
     bucket_name = match.group(1)
@@ -96,7 +93,7 @@ def get_pdf_text():
     # annotation/pages/blocks/paragraphs/words/symbols
     # including confidence scores and bounding boxes
     print('Full text:\n')
-    print(annotation['text'])
+    #print(annotation['text'])
 
 def getData(text):
     """
