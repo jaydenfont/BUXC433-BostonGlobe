@@ -98,10 +98,11 @@ def getGrievList(string):
 def get_fields(grievances_list):
 
     # test for griveance #
-    #grievances_list = [grievances_list[41]]
+    #grievances_list = [grievances_list[6]]
         
     data = {}
     count = 0
+
     for grievance in grievances_list:
 
         print(count)
@@ -122,11 +123,17 @@ def get_fields(grievances_list):
         fields.append(institution[0][lastindex:])  # remove everything except the text after the word "Institution"
         
         # Housing
-        housing = [i for i in grievance if 'Housing ' in i]
+        housing_index = [i for i, x in enumerate(grievance) if 'Housing' in x or x == "Housing"][0]
+        """
         if len(housing) is not 0:
             fields.append(housing[0][8:])
         else:
             fields.append("")
+            """
+        if "Housing " in grievance[housing_index]:
+            fields.append(grievance[housing_index][8:])
+        else:
+            fields.append(grievance[housing_index+1])
 
         # Date of incident
         date_of_incident = [grievance[i+1] for i, x in enumerate(grievance) if "Incident" in x]
@@ -162,8 +169,18 @@ def get_fields(grievances_list):
             or x == "BY INSTITUTIONAL GRIE ANCE COORDINATOR") and "Date Received" in grievance[i+1]][0]
 
         receipt = grievance[receipt_index:]
+        print()
         print(receipt)
 
+
+        # Remove footer text
+        try:
+            bu_request_index = [i for i, x in enumerate(receipt) if x == "BU Grievances Request"][0]
+            end_of_footer_index = [i for i, x in enumerate(receipt) if x == "RECEIPT BY INSTITUTIONAL GRIEVANCE COORDINATOR" and i > bu_request_index][0] # or (x == "20181023" and grievance[i+1] == "Staff"))
+            receipt = receipt[:bu_request_index] + receipt[end_of_footer_index+1:]
+
+        except IndexError:  # single page grievances don't need to do this, will throw index error
+            pass
 
 
         # Date of Receipt
@@ -254,13 +271,16 @@ def send_to_gsc(data, folder):
 
 
 if __name__ == "__main__":
-    folder = 'occc_result'
-    load_dotenv(override=True)
-    json_list = getIterables(folder)
-    all_data = joinJSONs(json_list)
-    grievances_list = getGrievList(all_data)
-    data = get_fields(grievances_list)
-    print(data)
-    send_to_gsc(data, folder)
-    
+    institutions = ['concord', 'ncci', 'norfolk', 'occc', 'shirley', 'sbcc']
+    for institution in institutions:
+        folder = institution + '_result'
+        print(folder)
+        load_dotenv(override=True)
+        json_list = getIterables(folder)
+        all_data = joinJSONs(json_list)
+        grievances_list = getGrievList(all_data)
+        data = get_fields(grievances_list)
+        print(data)
+        send_to_gsc(data, folder)
+
 
