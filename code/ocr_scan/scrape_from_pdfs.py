@@ -69,12 +69,15 @@ def get_pdf_text():
     prefix = match.group(2)
 
     bucket = storage_client.get_bucket(bucket_name)
-
+  
     # List objects with the given prefix.
     blob_list = list(bucket.list_blobs(prefix=prefix))
     print('Output files:')
     for blob in blob_list:
         print(blob.name)
+    
+    all_blobs = [blob for blob in bucket.list_blobs()]
+    blob_list = [blob for blob in all_blobs if pattern.search(blob.name) == "output-1-to-22.json"]
 
     # Process the first output file from GCS.
     # Since we specified batch_size=2, the first response contains

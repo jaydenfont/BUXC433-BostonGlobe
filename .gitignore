@@ -108,7 +108,7 @@ celerybeat.pid
 .env
 .venv
 env/
-venv/
+venv/ 
 ENV/
 env.bak/
 venv.bak/
@@ -147,3 +147,7 @@ code/pdf_csv/output
 code/pdf_csv/pdfs
 code/pdfs
 cogent-tree-316923-ee7580600525.json
+
+.vscode
+complaint_words.json
+descriptive_stats.ipynb

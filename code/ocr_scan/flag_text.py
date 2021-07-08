@@ -1,4 +1,7 @@
 import json
+import pandas as pd
+from dotenv import load_dotenv
+import os
 
 def get_complaint_dict(file):
     # read json file of complaint words
@@ -8,7 +11,7 @@ def get_complaint_dict(file):
     return complaint_words
 
 
-def find_categories(complaint_words, complaint):
+def find_categories(complaint, complaint_words):
     complaint = complaint.lower()
 
     # find which categories the complaint falls under
@@ -17,13 +20,15 @@ def find_categories(complaint_words, complaint):
         for word in complaint_words[category]:
             if word in complaint and category not in categories: 
                 categories.append(category)
-
+    if len(categories) == 0:
+        categories.append("None")
     return categories
 
 
 if __name__ == "__main__":
     file = 'complaint_words.json'
+    load_dotenv()
+    data = pd.read_csv(os.getenv("FULLSPREADSHEETPATH"))
     complaint_words = get_complaint_dict(file)
-    complaint = 'I was Assalted By Agular From D-2 We had Words with each outher and he entered my room and Started hiting me and Kicking me and them outher officer came and Some one sprad me with mace and one of the officer that cuffed me and took me to new man also Asslated me to on the way their'
-    categories = find_categories(complaint_words, complaint)
-    print(categories)
+    data['misconduct_classifiers'] = data.complaint.apply(find_categories, args=(complaint_words,))
+    data.to_csv("data_with_flags.csv")
