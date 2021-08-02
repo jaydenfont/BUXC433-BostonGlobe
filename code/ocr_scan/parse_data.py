@@ -91,7 +91,7 @@ def getGrievList(string):
 
 
 # INPUT: a list of grievances
-# RETURN: a dictionary where the key is the grievance # and the value is a list containing
+# OUTPUT: a dictionary where the key is the grievance # and the value is a list containing
 #        [institution, housing, date of incident, complaint, staff involved, staff recipient, date of receipt, decision date, signature, final decision, decision]
 # General Strategy: find the indices of the words in the list before and after the information you want, then slice the grievances list and join the information
 #   Straightforward for Grievance info, takes more effort for receipt information since it can span multiple pages
@@ -241,7 +241,8 @@ def get_fields(grievances_list):
 
     return data
 
-
+# INPUT: dictionary of grievance data, folder name
+# OUTPUT: Uploads dictionary to GCS as JSON, does not return value in execution
 def send_to_gsc(data, folder):
 
     # get name of file to use

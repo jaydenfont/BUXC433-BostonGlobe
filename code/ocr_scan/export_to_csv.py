@@ -18,7 +18,8 @@ def get_json():
     extracted_files = [json.loads(x) for i, x in enumerate(files)]
     return extracted_files
 
-
+# INPUT: JSON files from get_json()
+# OUTPUT: CSV file containing all grievance data
 def convert_to_csv(extracted_files):
     dataframes = []
     for i, file in enumerate(extracted_files):

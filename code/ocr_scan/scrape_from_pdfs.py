@@ -11,6 +11,7 @@ from google.cloud import storage
 
 
 # for JPEG
+# Depreciated
 def getText(uri):
     """
     Function that takes as input an address to an image and returns all the text that was detected in that image
@@ -26,6 +27,7 @@ def getText(uri):
     return response.text_annotations[0].description
 
 
+# Finds pdf on GCS, extracts text and uploads into JSON files in batches of 100 pages
 def get_pdf_text():
     client = vision.ImageAnnotatorClient.from_service_account_json(os.getenv("credentials"))
     batch_size=100
@@ -34,7 +36,7 @@ def get_pdf_text():
         type_=vision.Feature.Type.DOCUMENT_TEXT_DETECTION
     )
 
-    # GCS source (where pdf is stored on cloud)
+    # GCS source (where pdf is stored on cloud), change pdf name based on file
     gcs_source_uri = "gs://boston-globe/Norfolk_Grievances.pdf"
     gcs_source = vision.GcsSource(uri=gcs_source_uri)
 
@@ -98,6 +100,7 @@ def get_pdf_text():
     print('Full text:\n')
     #print(annotation['text'])
 
+# Depreciated
 def getData(text):
     """
     Function that takes as input a string and returns dictionary with the fields of the resulting database as keys and the values discovered for those keys in the inputed string.
@@ -187,6 +190,7 @@ def getData(text):
     return return_dict
 
 
+# Depreciated
 def clearDB():
     """
     Function that clears the database,
@@ -212,6 +216,7 @@ def clearDB():
         print("Error while connecting to MySQL", e)
 
 
+# Depreciated
 def addGrievance(data):
     """
     Function that takes into input a dictionary of grievance data and puts it into a database.
@@ -238,7 +243,7 @@ def addGrievance(data):
     except Error as e:
         print("Error while connecting to MySQL", e)
 
-
+# Depreciated
 def ocr():
     """
     Funciton to add all greivances into the database.
